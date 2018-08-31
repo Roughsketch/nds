@@ -1,0 +1,13 @@
+[package]
+name = "nds"
+version = "0.1.0"
+authors = ["Maid Dog <maiddogsrl@gmail.com>"]
+
+[dependencies]
+byteorder = "1.2"
+failure = "0.1"
+memmap = "0.6"
+
+[dependencies.num]
+version = "0.2"
+default-features = false
