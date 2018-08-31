@@ -12,20 +12,6 @@ mod tests {
         run_test(_built_rom_is_same, _built_rom_is_same_cleanup);
     }
 
-    fn run_test<T, U>(test: T, cleanup: U) -> ()
-        where
-            T: FnOnce() -> () + panic::UnwindSafe,
-            U: FnOnce() 
-    {
-        let result = panic::catch_unwind(|| {
-            test()
-        });
-
-        cleanup();
-
-        assert!(result.is_ok());
-    }
-
     fn _built_rom_is_same() {
         use std::fs::read;
 
@@ -58,5 +44,19 @@ mod tests {
 
         let _ = remove_dir_all("output");
         let _ = remove_file("built.nds");
+    }
+
+    fn run_test<T, U>(test: T, cleanup: U) -> ()
+        where
+            T: FnOnce() -> () + panic::UnwindSafe,
+            U: FnOnce() 
+    {
+        let result = panic::catch_unwind(|| {
+            test()
+        });
+
+        cleanup();
+
+        assert!(result.is_ok());
     }
 }
