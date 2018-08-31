@@ -11,3 +11,6 @@ memmap = "0.6"
 [dependencies.num]
 version = "0.2"
 default-features = false
+
+[dev-dependencies]
+md5 = "0.3"
