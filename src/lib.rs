@@ -2,6 +2,7 @@ extern crate byteorder;
 #[macro_use] extern crate failure;
 extern crate memmap;
 extern crate num;
+extern crate rayon;
 
 mod build;
 mod extract;

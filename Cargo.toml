@@ -7,6 +7,7 @@ authors = ["Maid Dog <maiddogsrl@gmail.com>"]
 byteorder = "1.2"
 failure = "0.1"
 memmap = "0.6"
+rayon = "1.0"
 
 [dependencies.num]
 version = "0.2"

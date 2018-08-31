@@ -2,6 +2,7 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use failure::Error;
 use memmap::Mmap;
 use num::{Num, NumCast};
+use rayon::prelude::*;
 
 use std::fs::{create_dir_all, File};
 use std::io::Write;
@@ -35,6 +36,8 @@ impl Extractor {
     /// if there are issues with the ROM structure, or if there is
     /// an issue writing files.
     pub fn extract<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
+        use fs::FileSystem;
+
         let root = path.as_ref();
 
         create_dir_all(root)?;
@@ -43,8 +46,33 @@ impl Extractor {
         self.write(root.join("arm9.bin"), self.read_u32(0x20)?, self.read_u32(0x2C)?)?;
         self.write(root.join("arm7.bin"), self.read_u32(0x30)?, self.read_u32(0x3C)?)?;
 
-        self.extract_overlays(root.join("overlay"))?;
-        self.extract_files(root.join("data"))?;
+        let overlay_path = root.join("overlay");
+        let file_path = root.join("data");
+
+        create_dir_all(&overlay_path)?;
+        create_dir_all(&file_path)?;
+
+        let fs = FileSystem::new(self.fnt()?, self.fat()?)?;
+
+        fs.overlays()
+            .par_iter()
+            .for_each(|file| {
+                let alloc = fs.alloc_info(file.id).unwrap();
+
+                if let Err(why) = self.write(&overlay_path.join(&file.path), alloc.start, alloc.len()) {
+                    eprintln!("Could not write file: {}", why);
+                }
+            });
+
+        fs.files()
+            .par_iter()
+            .for_each(|file| {
+                let alloc = fs.alloc_info(file.id).unwrap();
+
+                if let Err(why) = self.write(&file_path.join(&file.path), alloc.start, alloc.len()) {
+                    eprintln!("Could not write file: {}", why);
+                }
+            });
 
         Ok(())
     }
@@ -93,33 +121,5 @@ impl Extractor {
         let fnt_len = self.read_u32(0x44)? as usize;
 
         FileNameTable::new(&self.data[fnt_start..fnt_start + fnt_len])
-    }
-    
-    /// Extract the overlays and put them in their own directory
-    fn extract_overlays<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
-        create_dir_all(path)?;
-
-        Ok(())
-    }
-    
-    /// Extract the files and put them in their own directory
-    fn extract_files<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
-        use fs::FileSystem;
-        create_dir_all(&path)?;
-
-        let fs = FileSystem::new(self.fnt()?, self.fat()?)?;
-
-        fs
-            .files()
-            .iter()
-            .for_each(|file| {
-                let alloc = fs.alloc_info(file.id).unwrap();
-
-                if let Err(why) = self.write(&path.as_ref().join(&file.path), alloc.start, alloc.len()) {
-                    eprintln!("Could not write file: {}", why);
-                }
-            });
-
-        Ok(())
     }
 }

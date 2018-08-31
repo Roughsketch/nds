@@ -1,5 +1,6 @@
 use byteorder::{LittleEndian, ReadBytesExt};
 use failure::Error;
+use rayon::prelude::*;
 
 use std::collections::BTreeMap;
 use std::io::{Cursor, Read};
@@ -71,6 +72,10 @@ impl Directory {
 
     pub fn append_file(&mut self, file: FileEntry) {
         self.files.push(file);
+    }
+
+    pub fn append_files(&mut self, files: &[FileEntry]) {
+        self.files.extend_from_slice(files);
     }
 }
 
@@ -175,9 +180,7 @@ impl DirectoryTable {
 
         let dir = self.dirs.get_mut(&id).unwrap();
 
-        for file in files {
-            dir.append_file(file);
-        }
+        dir.append_files(&files);
 
         Ok(())
     }
@@ -213,9 +216,13 @@ impl FileNameTable {
         })
     }
 
-    pub fn files(&self) -> Vec<FileEntry> {
-        self.table.dirs.iter().flat_map(|(&id, ref dir)| {
-            dir.files.clone()
+    pub fn files(&self) -> Vec<&FileEntry> {
+        self.table.dirs.par_iter().flat_map(|(_, ref dir)| {
+            &dir.files
         }).collect::<_>()
+    }
+
+    pub fn start_id(&self) -> u16 {
+        self.table.dirs[&ROOT_ID].start_id()
     }
 }

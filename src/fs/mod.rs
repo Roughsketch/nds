@@ -49,8 +49,19 @@ impl FileSystem {
         })
     }
 
-    pub fn files(&self) -> Vec<FileEntry> {
+    pub fn files(&self) -> Vec<&FileEntry> {
         self.fnt.files()
+    }
+
+    pub fn overlays(&self) -> Vec<FileEntry> {
+        let start = self.fnt.start_id();
+        let mut overlays = Vec::new();
+
+        for id in 0..start {
+            overlays.push(FileEntry::new(id, &format!("overlay_{:04}", id)));
+        }
+
+        overlays
     }
 
     pub fn alloc_info(&self, id: u16) -> Option<AllocInfo> {
