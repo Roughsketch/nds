@@ -9,6 +9,10 @@ failure = "0.1"
 memmap = "0.6"
 rayon = "1.0"
 
+[dependencies.num]
+version = "0.2"
+default-features = false
+
 [dev-dependencies]
 criterion = "0.2"
 md5 = "0.3"

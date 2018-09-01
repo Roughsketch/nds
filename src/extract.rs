@@ -1,6 +1,7 @@
 use byteorder::{LittleEndian, ReadBytesExt};
 use failure::Error;
 use memmap::Mmap;
+use num::NumCast;
 use rayon::prelude::*;
 
 use std::fs::{create_dir_all, File};
@@ -79,12 +80,13 @@ impl Extractor {
     fn write<P, N1, N2>(&self, path: P, offset: N1, len: N2) -> Result<(), Error>
         where
             P: AsRef<Path>,
-            u64: From<N1> + From<N2>
+            N1: NumCast,
+            N2: NumCast
     {
         use std::fs::write;
 
-        let offset: usize = u64::from(offset) as usize;
-        let len: usize = u64::from(len) as usize;
+        let offset: usize = NumCast::from(offset).unwrap();
+        let len: usize = NumCast::from(len).unwrap();
 
         {
             let parent = path.as_ref().parent().unwrap_or(Path::new(""));
