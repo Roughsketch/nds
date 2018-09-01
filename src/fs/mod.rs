@@ -12,6 +12,7 @@ pub mod fnt;
 use self::fat::FileAllocTable;
 use self::fnt::{Directory, FileEntry, ROOT_ID};
 
+/// Represents a NitroROM file system.
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FileSystem {
     pub dirs: BTreeMap<u16, Directory>,
@@ -41,20 +42,25 @@ impl FileSystem {
         Ok(fnt)
     }
 
+    /// How many directories there are
     pub fn count(&self) -> usize {
         self.dirs.len()
     }
     
+    /// Get a Vec of all files
     pub fn files(&self) -> Vec<&FileEntry> {
         self.dirs.par_iter().flat_map(|(_, ref dir)| {
             &dir.files
         }).collect::<_>()
     }
 
+    /// The lowest ID in the File System. Any ID lower than this in 
+    /// the FAT is an overlay file.
     pub fn start_id(&self) -> u16 {
         self.dirs[&ROOT_ID].start_id()
     }
 
+    /// Get a Vec of all overlays
     pub fn overlays(&self) -> Vec<FileEntry> {
         let mut overlays = Vec::new();
 

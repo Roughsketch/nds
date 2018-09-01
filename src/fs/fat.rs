@@ -36,6 +36,15 @@ pub struct FileAllocTable {
 }
 
 impl FileAllocTable {
+    /// Takes a raw FAT and reads it into a list.
+    /// 
+    /// # Errors
+    /// Will return an error if the length of the data is not
+    /// divisible by 8. This is because each FAT entry is two
+    /// 32-bit integers.
+    /// 
+    /// It will also return an error if reading from the data
+    /// fails.
     pub fn new(fat: &[u8]) -> Result<Self, Error> {
         // Each entry is 8 bytes, so if not divisible by 8
         // then there is an issue with the passed data.
@@ -54,6 +63,9 @@ impl FileAllocTable {
         })
     }
 
+    /// Returns the allocation info for the given file ID.
+    /// 
+    /// If the given ID is not in the list, it will return `None`.
     pub fn get(&self, id: u16) -> Option<AllocInfo> {
         if self.list.len() >= id as usize {
             return Some(self.list[id as usize]);
