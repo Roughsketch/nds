@@ -9,10 +9,6 @@ failure = "0.1"
 memmap = "0.6"
 rayon = "1.0"
 
-[dependencies.num]
-version = "0.2"
-default-features = false
-
 [dev-dependencies]
 criterion = "0.2"
 md5 = "0.3"
@@ -20,3 +16,11 @@ md5 = "0.3"
 [[bench]]
 name = "extract"
 harness = false
+
+[profile.release]
+lto = true
+codegen-units = 1
+
+[profile.bench]
+lto = true
+codegen-units = 1

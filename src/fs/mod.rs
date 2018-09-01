@@ -53,9 +53,12 @@ impl FileSystem {
     
     /// Get a Vec of all files
     pub fn files(&self) -> Vec<&FileEntry> {
-        self.dirs.par_iter().flat_map(|(_, ref dir)| {
-            &dir.files
-        }).collect::<_>()
+        self.dirs
+            .par_iter()
+            .flat_map(|(_, ref dir)| {
+                &dir.files
+            })
+            .collect::<_>()
     }
 
     /// The lowest ID in the File System. Any ID lower than this in 

@@ -1,11 +1,9 @@
 use byteorder::{LittleEndian, ReadBytesExt};
 use failure::Error;
 use memmap::Mmap;
-use num::{Num, NumCast};
 use rayon::prelude::*;
 
 use std::fs::{create_dir_all, File};
-use std::io::Write;
 use std::path::Path;
 
 #[fail(display = "Invalid NDS rom or directory.")]
@@ -78,14 +76,15 @@ impl Extractor {
     /// A utility to make it easier to write chunks of the ROM to files.
     /// Copies `len` bytes from the ROM starting from `offset` into the file 
     /// denoted by `path`
-    fn write<P, R1, R2>(&self, path: P, offset: R1, len: R2) -> Result<(), Error>
+    fn write<P, N1, N2>(&self, path: P, offset: N1, len: N2) -> Result<(), Error>
         where
             P: AsRef<Path>,
-            R1: Num + NumCast,
-            R2: Num + NumCast
+            u64: From<N1> + From<N2>
     {
-        let offset: usize = NumCast::from(offset).unwrap();
-        let len: usize = NumCast::from(len).unwrap();
+        use std::fs::write;
+
+        let offset: usize = u64::from(offset) as usize;
+        let len: usize = u64::from(len) as usize;
 
         {
             let parent = path.as_ref().parent().unwrap_or(Path::new(""));
@@ -95,8 +94,7 @@ impl Extractor {
             }
         }
 
-        let mut file = File::create(path)?;
-        file.write_all(&self.data[offset..offset + len])?;
+        write(path, &self.data[offset..offset + len])?;
 
         Ok(())
     }
