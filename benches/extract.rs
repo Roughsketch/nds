@@ -23,5 +23,10 @@ fn bench_extract_small(c: &mut Criterion) {
     }));
 }
 
-criterion_group!(benches, bench_extract_big, bench_extract_small);
+criterion_group! {
+    name = benches;
+    config = Criterion::default().sample_size(25);
+    targets = bench_extract_big, bench_extract_small
+}
+
 criterion_main!(benches);
