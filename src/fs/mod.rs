@@ -10,31 +10,7 @@ pub mod fat;
 pub mod fnt;
 
 use self::fat::FileAllocTable;
-use self::fnt::{Directory, DirectoryInfo, FileEntry, ROOT_ID};
-
-/// Represents an entry in the File System Table.
-#[derive(Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct FstEntry {
-    /// The id of the FST node.
-    id: u16,
-    /// The name of the file or folder.
-    name: String,
-    /// If the entry is a directory, it will have child entries.
-    children: Option<Vec<FstEntry>>,
-    /// If the entry is a file, it will have an allocation table entry.
-    alloc: Option<self::fat::AllocInfo>,
-}
-
-impl FstEntry {
-    pub fn new(id: u16, name: &str, children: Option<Vec<FstEntry>>, alloc: Option<self::fat::AllocInfo>) -> Self {
-        Self {
-            id,
-            name: name.into(),
-            children,
-            alloc,
-        }
-    }
-}
+use self::fnt::{Directory, FileEntry, ROOT_ID};
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FileSystem {
@@ -54,7 +30,7 @@ impl FileSystem {
 
         for index in 0..count {
             let id = ROOT_ID + index;
-            dirs.insert(id, Directory::new(&DirectoryInfo::new(&mut cursor, id)?));
+            dirs.insert(id, Directory::new(&mut cursor, id)?);
         }
 
         let fat = FileAllocTable::new(fat)?;
