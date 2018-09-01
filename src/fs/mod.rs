@@ -16,7 +16,7 @@ use self::fnt::{Directory, FileEntry, ROOT_ID};
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct FileSystem {
     pub dirs: BTreeMap<u16, Directory>,
-    fat: FileAllocTable,
+    overlays: Vec<FileEntry>,
 }
 
 impl FileSystem {
@@ -36,8 +36,12 @@ impl FileSystem {
 
         let fat = FileAllocTable::new(fat)?;
 
-        let mut fnt = Self { dirs, fat };
-        fnt.populate(&mut cursor)?;
+        let mut fnt = Self { 
+            dirs,
+            overlays: Vec::new(),
+        };
+
+        fnt.populate(&mut cursor, &fat)?;
 
         Ok(fnt)
     }
@@ -61,24 +65,25 @@ impl FileSystem {
     }
 
     /// Get a Vec of all overlays
-    pub fn overlays(&self) -> Vec<FileEntry> {
-        let mut overlays = Vec::new();
-
-        for id in 0..self.start_id() {
-            let alloc_info = self.fat.get(id).unwrap();
-            overlays.push(FileEntry::new(id, &format!("overlay_{:04}", id), alloc_info));
-        }
-
-        overlays
+    pub fn overlays(&self) -> &[FileEntry] {
+        &self.overlays
     }
 
-    fn populate(&mut self, cursor: &mut Cursor<&[u8]>) -> Result<(), Error> {
-        self._populate(cursor, "", ROOT_ID)?;
+    fn populate(&mut self, cursor: &mut Cursor<&[u8]>, fat: &FileAllocTable) -> Result<(), Error> {
+        self._populate(cursor, "", ROOT_ID, fat)?;
+
+        self.overlays = (0..self.start_id())
+            .into_par_iter()
+            .map(|id| {
+                let alloc_info = fat.get(id).unwrap();
+                FileEntry::new(id, &format!("overlay_{:04}", id), alloc_info)
+            })
+            .collect::<_>();
 
         Ok(())
     }
 
-    fn _populate<P: AsRef<Path>>(&mut self, mut cursor: &mut Cursor<&[u8]>, path: P, id: u16) -> Result<(), Error> {
+    fn _populate<P: AsRef<Path>>(&mut self, mut cursor: &mut Cursor<&[u8]>, path: P, id: u16, fat: &FileAllocTable) -> Result<(), Error> {
         let mut file_id = {
             let dir = self.dirs.get_mut(&id).unwrap();
             dir.set_path(&path);
@@ -100,12 +105,12 @@ impl FileSystem {
                 let pos = cursor.position();
                 let new_path = path.as_ref().join(name);
                 
-                self._populate(&mut cursor, new_path, dir_id)?;
+                self._populate(&mut cursor, new_path, dir_id, fat)?;
 
                 cursor.set_position(pos);
             } else {
                 let file_path = path.as_ref().join(name);
-                let alloc_info = self.fat.get(file_id).unwrap();
+                let alloc_info = fat.get(file_id).unwrap();
 
                 files.push(FileEntry::new(file_id, &file_path, alloc_info));
                 file_id += 1;
