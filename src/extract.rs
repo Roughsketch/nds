@@ -8,11 +8,13 @@ use std::fs::{create_dir_all, File};
 use std::io::Write;
 use std::path::Path;
 
-use fs::{fat::FileAllocTable, fnt::FileNameTable};
-
 #[fail(display = "Invalid NDS rom or directory.")]
 #[derive(Clone, Debug, Fail)]
 pub struct InvalidRomError;
+
+#[fail(display = "Not enough data.")]
+#[derive(Clone, Debug, Fail)]
+struct NotEnoughData;
 
 /// Extracts files from an NDS ROM.
 #[derive(Debug)]
@@ -57,9 +59,7 @@ impl Extractor {
         fs.overlays()
             .par_iter()
             .for_each(|file| {
-                let alloc = fs.alloc_info(file.id).unwrap();
-
-                if let Err(why) = self.write(&overlay_path.join(&file.path), alloc.start, alloc.len()) {
+                if let Err(why) = self.write(&overlay_path.join(&file.path), file.alloc.start, file.alloc.len()) {
                     eprintln!("Could not write file: {}", why);
                 }
             });
@@ -67,9 +67,7 @@ impl Extractor {
         fs.files()
             .par_iter()
             .for_each(|file| {
-                let alloc = fs.alloc_info(file.id).unwrap();
-
-                if let Err(why) = self.write(&file_path.join(&file.path), alloc.start, alloc.len()) {
+                if let Err(why) = self.write(&file_path.join(&file.path), file.alloc.start, file.alloc.len()) {
                     eprintln!("Could not write file: {}", why);
                 }
             });
@@ -109,17 +107,21 @@ impl Extractor {
         Ok(value)
     }
 
-    fn fat(&self) -> Result<FileAllocTable, Error> {
+    fn fat(&self) -> Result<&[u8], Error> {
         let fat_start = self.read_u32(0x48)? as usize;
         let fat_len = self.read_u32(0x4C)? as usize;
 
-        FileAllocTable::new(&self.data[fat_start..fat_start + fat_len])
+        ensure!(self.data.len() > fat_start + fat_len, NotEnoughData);
+
+        Ok(&self.data[fat_start..fat_start + fat_len])
     }
 
-    fn fnt(&self) -> Result<FileNameTable, Error> {
+    fn fnt(&self) -> Result<&[u8], Error> {
         let fnt_start = self.read_u32(0x40)? as usize;
         let fnt_len = self.read_u32(0x44)? as usize;
 
-        FileNameTable::new(&self.data[fnt_start..fnt_start + fnt_len])
+        ensure!(self.data.len() > fnt_start + fnt_len, NotEnoughData);
+
+        Ok(&self.data[fnt_start..fnt_start + fnt_len])
     }
 }
