@@ -8,6 +8,14 @@ mod tests {
     use std::panic;
 
     #[test]
+    fn extract_tiny() {
+        let extractor = Extractor::new("TinyFB.nds")
+            .expect("Could not make Extractor");
+
+        assert!(extractor.extract("tmp/tiny").is_ok());
+    }
+
+    #[test]
     fn built_rom_is_same() {
         run_test(_built_rom_is_same, _built_rom_is_same_cleanup);
     }
