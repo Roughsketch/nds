@@ -15,6 +15,10 @@ pub struct InvalidRomError;
 #[derive(Clone, Debug, Fail)]
 struct NotEnoughData;
 
+#[fail(display = "Header checksum does not match contents.")]
+#[derive(Clone, Debug, Fail)]
+struct InvalidChecksum;
+
 /// Extracts files from an NDS ROM.
 #[derive(Debug)]
 pub struct Extractor {
@@ -27,9 +31,13 @@ impl Extractor {
         let root = path.as_ref();
 
         let file = File::open(root)?;
-        
+        let data = unsafe { Mmap::map(&file)? };
+        let checksum = (&data[0x15E..]).read_u16::<LittleEndian>()?;
+
+        ensure!(util::crc16(data[..0x15E]) == checksum, InvalidChecksum);
+
         Ok(Self {
-            data: unsafe { Mmap::map(&file)? },
+            data,
         })
     }
 
