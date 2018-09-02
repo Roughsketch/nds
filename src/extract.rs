@@ -1,5 +1,5 @@
 use byteorder::{LittleEndian, ReadBytesExt};
-use failure::{fail, Error};
+use failure::{bail, ensure, Fail, Error};
 use memmap::Mmap;
 use num::NumCast;
 use rayon::prelude::*;
@@ -45,7 +45,7 @@ impl Extractor {
     /// if there are issues with the ROM structure, or if there is
     /// an issue writing files.
     pub fn extract<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
-        use fs::FileSystem;
+        use crate::fs::FileSystem;
 
         let root = path.as_ref();
 

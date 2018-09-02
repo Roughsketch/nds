@@ -1,4 +1,4 @@
-#![feature(rust_2018_preview, uniform_paths)]
+#![feature(custom_attribute, uniform_paths)]
 
 mod build;
 mod extract;

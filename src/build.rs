@@ -1,9 +1,9 @@
-use failure::{fail, Error};
+use failure::{bail, ensure, Fail, Error};
 
 use std::fs::read;
 use std::path::{Path, PathBuf};
 
-use fs::FileSystem;
+use crate::fs::FileSystem;
 
 #[fail(display = "Missing required directory: '{}'.", _0)]
 #[derive(Clone, Debug, Fail)]

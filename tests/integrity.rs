@@ -1,10 +1,7 @@
-extern crate md5;
-extern crate nds;
-
 #[cfg(test)]
 mod tests {
-    use super::nds::{Extractor, Builder};
-    use super::md5::compute;
+    use nds::{Extractor, Builder};
+    use md5::compute;
     use std::panic;
 
     #[test]
