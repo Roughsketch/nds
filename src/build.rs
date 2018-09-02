@@ -1,5 +1,9 @@
-use failure::Error;
+use failure::{fail, Error};
+
+use std::fs::read;
 use std::path::{Path, PathBuf};
+
+use fs::FileSystem;
 
 #[fail(display = "Missing required directory: '{}'.", _0)]
 #[derive(Clone, Debug, Fail)]
@@ -68,6 +72,9 @@ impl Builder {
     pub fn build<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
         let output = path.as_ref();
 
+        // let header = read(self.root.join("header.bin"))?;
+
+        // let fs = FileSystem::build(self.root)?;
 
         Ok(())
     }

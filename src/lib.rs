@@ -1,12 +1,8 @@
-extern crate byteorder;
-#[macro_use] extern crate failure;
-extern crate memmap;
-extern crate num;
-extern crate rayon;
+#![feature(rust_2018_preview, uniform_paths)]
 
 mod build;
 mod extract;
 pub mod fs;
 
-pub use self::build::Builder;
-pub use self::extract::Extractor;
+pub use crate::build::Builder;
+pub use crate::extract::Extractor;
