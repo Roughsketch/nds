@@ -1,4 +1,7 @@
+cargo-features = ["edition"]
+
 [package]
+edition = "2018"
 name = "nds"
 version = "0.1.0"
 authors = ["Maid Dog <maiddogsrl@gmail.com>"]
