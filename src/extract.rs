@@ -32,9 +32,11 @@ impl Extractor {
 
         let file = File::open(root)?;
         let data = unsafe { Mmap::map(&file)? };
+        
         let checksum = (&data[0x15E..]).read_u16::<LittleEndian>()?;
+        let crc = crate::util::crc::crc16(&data[0..0x15E]);
 
-        ensure!(util::crc16(data[..0x15E]) == checksum, InvalidChecksum);
+        ensure!(crc == checksum, InvalidChecksum);
 
         Ok(Self {
             data,

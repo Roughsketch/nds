@@ -13,6 +13,11 @@ mod tests {
     }
 
     #[test]
+    fn checksum_matches() {
+        assert!(Extractor::new("small.nds").is_ok());
+    }
+
+    #[test]
     fn built_rom_is_same() {
         run_test(_built_rom_is_same, _built_rom_is_same_cleanup);
     }
