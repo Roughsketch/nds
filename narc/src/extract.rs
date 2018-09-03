@@ -44,11 +44,14 @@ impl Extractor {
     pub fn extract<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
         use nitro_fs::FileSystem;
 
-        let file_count = read_u16(Header::FileCount as usize)?;
+        let file_count = self.read_u16(Header::FileCount as usize)? as usize;
         let fat_offset = Header::FatOffset as usize;
 
-        let fat = &data[fat_offset..fat_offset + file_count * 8];
+        let fat = &self.data[fat_offset..fat_offset + file_count * 8];
 
+        // TODO: Grab FNT and create a NitroFS FileSystem.
+
+        Ok(())
     }
 
     /// Reads a u16 from `data` at the given offset.
