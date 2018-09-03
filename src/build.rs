@@ -5,13 +5,7 @@ use std::path::{Path, PathBuf};
 
 use nitro_fs::FileSystem;
 
-#[fail(display = "Missing required directory: '{}'.", _0)]
-#[derive(Clone, Debug, Fail)]
-struct MissingFolderError(&'static str);
-
-#[fail(display = "Missing required file: '{}'.", _0)]
-#[derive(Clone, Debug, Fail)]
-struct MissingFileError(&'static str);
+use crate::NdsError;
 
 /// Builds an NDS ROM given a directory with valid structure.
 /// A directory is valid if [`is_nds_dir`] returns `Ok`
@@ -50,18 +44,18 @@ impl Builder {
         let root = path.as_ref();
 
         //  Check root
-        ensure!(root.is_dir(), MissingFolderError("root"));
+        ensure!(root.is_dir(), NdsError::MissingFolderError("root"));
 
         //  Check system directories
-        ensure!(root.join("data").is_dir(), MissingFolderError("data"));
-        ensure!(root.join("overlay").is_dir(), MissingFolderError("overlay"));
+        ensure!(root.join("data").is_dir(), NdsError::MissingFolderError("data"));
+        ensure!(root.join("overlay").is_dir(), NdsError::MissingFolderError("overlay"));
 
         //  Check system files
-        ensure!(root.join("arm9_overlay.bin").is_file(), MissingFileError("arm9_overlay.bin"));
-        ensure!(root.join("arm7_overlay.bin").is_file(), MissingFileError("arm7_overlay.bin"));
-        ensure!(root.join("arm9.bin").is_file(), MissingFileError("arm9.bin"));
-        ensure!(root.join("arm7.bin").is_file(), MissingFileError("arm7.bin"));
-        ensure!(root.join("header.bin").is_file(), MissingFileError("header.bin"));
+        ensure!(root.join("arm9_overlay.bin").is_file(), NdsError::MissingFileError("arm9_overlay.bin"));
+        ensure!(root.join("arm7_overlay.bin").is_file(), NdsError::MissingFileError("arm7_overlay.bin"));
+        ensure!(root.join("arm9.bin").is_file(), NdsError::MissingFileError("arm9.bin"));
+        ensure!(root.join("arm7.bin").is_file(), NdsError::MissingFileError("arm7.bin"));
+        ensure!(root.join("header.bin").is_file(), NdsError::MissingFileError("header.bin"));
 
         Ok(())
     }

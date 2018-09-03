@@ -1,5 +1,5 @@
 use byteorder::{LittleEndian, ReadBytesExt};
-use failure::{bail, ensure, Fail, Error};
+use failure::{bail, ensure, Error};
 use memmap::Mmap;
 use num::NumCast;
 use rayon::prelude::*;
@@ -7,17 +7,7 @@ use rayon::prelude::*;
 use std::fs::{create_dir_all, File};
 use std::path::Path;
 
-#[fail(display = "Invalid NDS rom or directory.")]
-#[derive(Clone, Debug, Fail)]
-pub struct InvalidRomError;
-
-#[fail(display = "Not enough data.")]
-#[derive(Clone, Debug, Fail)]
-struct NotEnoughData;
-
-#[fail(display = "Header checksum does not match contents.")]
-#[derive(Clone, Debug, Fail)]
-struct InvalidChecksum;
+use crate::NdsError;
 
 enum Header {
     Arm9Offset = 0x20,
@@ -45,13 +35,13 @@ impl Extractor {
         let file = File::open(root)?;
         let data = unsafe { Mmap::map(&file)? };
 
-        ensure!(data.len() >= 0x160, NotEnoughData);
+        ensure!(data.len() >= 0x160, NdsError::NotEnoughData);
 
         if check_crc {
             let checksum = (&data[0x15E..]).read_u16::<LittleEndian>()?;
             let crc = crate::util::crc::crc16(&data[0..0x15E]);
 
-            ensure!(crc == checksum, InvalidChecksum);
+            ensure!(crc == checksum, NdsError::InvalidChecksum);
         }
 
         Ok(Self {
@@ -81,21 +71,29 @@ impl Extractor {
 
         let fs = FileSystem::new(self.fnt()?, self.fat()?)?;
 
-        fs.overlays()
+        let errors = fs.overlays()
             .par_iter()
-            .for_each(|file| {
-                if let Err(why) = self.write(&overlay_path.join(&file.path), file.alloc.start, file.alloc.len()) {
-                    eprintln!("Could not write file: {}", why);
+            .filter_map(|file| {
+                match self.write(&overlay_path.join(&file.path), file.alloc.start, file.alloc.len()) {
+                    Ok(_) => None,
+                    Err(why) => Some(why),
                 }
-            });
+            })
+            .collect::<Vec<Error>>();
 
-        fs.files()
+        ensure!(errors.is_empty(), NdsError::WriteError(errors));
+
+        let errors = fs.files()
             .par_iter()
-            .for_each(|file| {
-                if let Err(why) = self.write(&file_path.join(&file.path), file.alloc.start, file.alloc.len()) {
-                    eprintln!("Could not write file: {}", why);
+            .filter_map(|file| {
+                match self.write(&file_path.join(&file.path), file.alloc.start, file.alloc.len()) {
+                    Ok(_) => None,
+                    Err(why) => Some(why),
                 }
-            });
+            })
+            .collect::<Vec<Error>>();
+
+        ensure!(errors.is_empty(), NdsError::WriteError(errors));
 
         Ok(())
     }
@@ -114,7 +112,7 @@ impl Extractor {
         let offset: usize = NumCast::from(offset).unwrap();
         let len: usize = NumCast::from(len).unwrap();
 
-        ensure!(self.data.len() >= offset + len, NotEnoughData);
+        ensure!(self.data.len() >= offset + len, NdsError::NotEnoughData);
 
         {
             let parent = path.as_ref().parent().unwrap_or(Path::new(""));
@@ -139,7 +137,7 @@ impl Extractor {
         let fat_start = self.read_u32(Header::FatOffset as usize)? as usize;
         let fat_len = self.read_u32(Header::FatLen as usize)? as usize;
 
-        ensure!(self.data.len() > fat_start + fat_len, NotEnoughData);
+        ensure!(self.data.len() > fat_start + fat_len, NdsError::NotEnoughData);
 
         Ok(&self.data[fat_start..fat_start + fat_len])
     }
@@ -148,7 +146,7 @@ impl Extractor {
         let fnt_start = self.read_u32(Header::FntOffset as usize)? as usize;
         let fnt_len = self.read_u32(Header::FntLen as usize)? as usize;
 
-        ensure!(self.data.len() > fnt_start + fnt_len, NotEnoughData);
+        ensure!(self.data.len() > fnt_start + fnt_len, NdsError::NotEnoughData);
 
         Ok(&self.data[fnt_start..fnt_start + fnt_len])
     }
