@@ -4,7 +4,7 @@ use failure::Error;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
-use crate::fs::fat::AllocInfo;
+use crate::fat::AllocInfo;
 
 /// The offset that directory IDs start at. The root
 /// directory is ID 0xF000 and subsequent directories

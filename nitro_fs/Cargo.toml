@@ -2,13 +2,13 @@ cargo-features = ["edition"]
 
 [package]
 edition = "2018"
-name = "narc"
+name = "nitro_fs"
 version = "0.1.0"
 authors = ["Maid Dog <maiddogsrl@gmail.com>"]
-description = "Library for handling Nintendo Nitro Archives."
-documentation = "https://docs.rs/narc"
+description = "Library for handling Nintendo's Nitro Filesystem"
+documentation = "https://docs.rs/nitro_fs"
 repository = "https://github.com/Roughsketch/nds"
-keywords = ["utility", "nds", "narc", "extract", "build"]
+keywords = ["nds", "nitro", "filesystem"]
 categories = ["filesystem"]
 license = "MIT"
 exclude = ["tests/*", "benches/*"]
@@ -16,7 +16,4 @@ exclude = ["tests/*", "benches/*"]
 [dependencies]
 byteorder = "1.2"
 failure = "0.1"
-memmap = "0.6"
-
-[dependencies.nitro_fs]
-path = "../nitro_fs"
+rayon = "1.0"

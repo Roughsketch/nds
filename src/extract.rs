@@ -63,7 +63,7 @@ impl Extractor {
     /// if there are issues with the ROM structure, or if there is
     /// an issue writing files.
     pub fn extract<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
-        use crate::fs::FileSystem;
+        use nitro_fs::FileSystem;
 
         let root = path.as_ref();
 

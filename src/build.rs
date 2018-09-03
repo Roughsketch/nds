@@ -3,7 +3,7 @@ use failure::{bail, ensure, Fail, Error};
 use std::fs::read;
 use std::path::{Path, PathBuf};
 
-use crate::fs::FileSystem;
+use nitro_fs::FileSystem;
 
 #[fail(display = "Missing required directory: '{}'.", _0)]
 #[derive(Clone, Debug, Fail)]

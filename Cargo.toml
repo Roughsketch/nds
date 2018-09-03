@@ -16,7 +16,8 @@ exclude = ["tests/*", "benches/*"]
 
 [workspace]
 members = [
-    "narc"
+    "narc",
+    "nitro_fs",
 ]
 
 [dependencies]
@@ -29,6 +30,9 @@ rayon = "1.0"
 [dependencies.num]
 version = "0.2"
 default-features = false
+
+[dependencies.nitro_fs]
+path = "nitro_fs"
 
 [dev-dependencies]
 criterion = "0.2"

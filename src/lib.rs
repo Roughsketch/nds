@@ -2,7 +2,6 @@
 
 mod build;
 mod extract;
-pub mod fs;
 pub mod util;
 
 pub use crate::build::Builder;
