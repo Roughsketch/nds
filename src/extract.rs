@@ -19,6 +19,18 @@ struct NotEnoughData;
 #[derive(Clone, Debug, Fail)]
 struct InvalidChecksum;
 
+enum Header {
+    Arm9Offset = 0x20,
+    Arm9Len = 0x2C,
+    Arm7Offset = 0x30,
+    Arm7Len = 0x3C,
+    FntOffset = 0x40,
+    FntLen = 0x44,
+    FatOffset = 0x48,
+    FatLen = 0x4C,
+    Size = 0x84,
+}
+
 /// Extracts files from an NDS ROM.
 #[derive(Debug)]
 pub struct Extractor {
@@ -27,16 +39,20 @@ pub struct Extractor {
 }
 
 impl Extractor {
-    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
+    pub fn new<P: AsRef<Path>>(path: P, check_crc: bool) -> Result<Self, Error> {
         let root = path.as_ref();
 
         let file = File::open(root)?;
         let data = unsafe { Mmap::map(&file)? };
-        
-        let checksum = (&data[0x15E..]).read_u16::<LittleEndian>()?;
-        let crc = crate::util::crc::crc16(&data[0..0x15E]);
 
-        ensure!(crc == checksum, InvalidChecksum);
+        ensure!(data.len() >= 0x160, NotEnoughData);
+
+        if check_crc {
+            let checksum = (&data[0x15E..]).read_u16::<LittleEndian>()?;
+            let crc = crate::util::crc::crc16(&data[0..0x15E]);
+
+            ensure!(crc == checksum, InvalidChecksum);
+        }
 
         Ok(Self {
             data,
@@ -53,9 +69,9 @@ impl Extractor {
 
         create_dir_all(root)?;
 
-        self.write(root.join("header.bin"), 0, 0x200)?;
-        self.write(root.join("arm9.bin"), self.read_u32(0x20)?, self.read_u32(0x2C)?)?;
-        self.write(root.join("arm7.bin"), self.read_u32(0x30)?, self.read_u32(0x3C)?)?;
+        self.write(root.join("header.bin"), 0, self.read_u32(Header::Size as usize)?)?;
+        self.write(root.join("arm9.bin"), self.read_u32(Header::Arm9Offset as usize)?, self.read_u32(Header::Arm9Len as usize)?)?;
+        self.write(root.join("arm7.bin"), self.read_u32(Header::Arm7Offset as usize)?, self.read_u32(Header::Arm7Len as usize)?)?;
 
         let overlay_path = root.join("overlay");
         let file_path = root.join("data");
@@ -98,6 +114,8 @@ impl Extractor {
         let offset: usize = NumCast::from(offset).unwrap();
         let len: usize = NumCast::from(len).unwrap();
 
+        ensure!(self.data.len() >= offset + len, NotEnoughData);
+
         {
             let parent = path.as_ref().parent().unwrap_or(Path::new(""));
 
@@ -118,8 +136,8 @@ impl Extractor {
     }
 
     fn fat(&self) -> Result<&[u8], Error> {
-        let fat_start = self.read_u32(0x48)? as usize;
-        let fat_len = self.read_u32(0x4C)? as usize;
+        let fat_start = self.read_u32(Header::FatOffset as usize)? as usize;
+        let fat_len = self.read_u32(Header::FatLen as usize)? as usize;
 
         ensure!(self.data.len() > fat_start + fat_len, NotEnoughData);
 
@@ -127,8 +145,8 @@ impl Extractor {
     }
 
     fn fnt(&self) -> Result<&[u8], Error> {
-        let fnt_start = self.read_u32(0x40)? as usize;
-        let fnt_len = self.read_u32(0x44)? as usize;
+        let fnt_start = self.read_u32(Header::FntOffset as usize)? as usize;
+        let fnt_len = self.read_u32(Header::FntLen as usize)? as usize;
 
         ensure!(self.data.len() > fnt_start + fnt_len, NotEnoughData);
 
