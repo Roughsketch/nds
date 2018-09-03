@@ -1,6 +1,7 @@
 use byteorder::{LittleEndian, ReadBytesExt};
 use failure::{bail, ensure, Error};
 use memmap::Mmap;
+use num::NumCast;
 
 use std::fs::File;
 use std::path::Path;
@@ -64,5 +65,34 @@ impl Extractor {
     fn read_u32(&self, offset: usize) -> Result<u32, Error> {
         let value = (&self.data[offset..]).read_u32::<LittleEndian>()?;
         Ok(value)
+    }
+
+    /// A utility to make it easier to write chunks of the ROM to files.
+    /// Copies `len` bytes from the ROM starting from `offset` into the file 
+    /// denoted by `path`
+    fn write<P, N1, N2>(&self, path: P, offset: N1, len: N2) -> Result<(), Error>
+        where
+            P: AsRef<Path>,
+            N1: NumCast,
+            N2: NumCast
+    {
+        use std::fs::write;
+
+        let offset: usize = NumCast::from(offset).unwrap();
+        let len: usize = NumCast::from(len).unwrap();
+
+        ensure!(self.data.len() >= offset + len, NarcError::NotEnoughData);
+
+        {
+            let parent = path.as_ref().parent().unwrap_or(Path::new(""));
+
+            if !parent.exists() {
+                create_dir_all(parent)?;
+            }
+        }
+
+        write(path, &self.data[offset..offset + len])?;
+
+        Ok(())
     }
 }

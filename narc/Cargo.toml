@@ -17,7 +17,12 @@ exclude = ["tests/*", "benches/*"]
 byteorder = "1.2"
 failure = "0.1"
 memmap = "0.6"
+rayon = "1.0"
 
 [dependencies.nitro_fs]
-path = "../nitro_fs"
 version = "0.1"
+path = "../nitro_fs"
+
+[dependencies.num]
+version = "0.2"
+default-features = false
