@@ -1,0 +1,19 @@
+cargo-features = ["edition"]
+
+[package]
+edition = "2018"
+name = "narc"
+version = "0.1.0"
+authors = ["Maid Dog <maiddogsrl@gmail.com>"]
+description = "Library for handling Nintendo Nitro Archives. (Placeholder)"
+documentation = "https://docs.rs/narc"
+repository = "https://github.com/Roughsketch/nds"
+readme = "README.md"
+keywords = ["utility", "nds", "narc", "extract", "build"]
+categories = ["filesystem"]
+license = "MIT"
+exclude = ["tests/*", "benches/*"]
+
+[dependencies]
+byteorder = "1.2"
+failure = "0.1"
