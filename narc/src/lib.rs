@@ -1,6 +1,6 @@
 #![feature(custom_attribute)]
 
-use failure::Fail;
+use failure::{Error, Fail};
 mod extract;
 
 pub use crate::extract::Extractor;
@@ -15,4 +15,7 @@ enum NarcError {
 
     #[fail(display = "Header is invalid.")]
     InvalidHeader,
+
+    #[fail(display = "Could not write all files successfully: {:?}", _0)]
+    WriteError(Vec<Error>),
 }

@@ -2,8 +2,9 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use failure::{bail, ensure, Error};
 use memmap::Mmap;
 use num::NumCast;
+use rayon::prelude::*;
 
-use std::fs::File;
+use std::fs::{create_dir_all, File};
 use std::path::Path;
 
 use crate::NarcError;
@@ -50,8 +51,23 @@ impl Extractor {
 
         let fat = &self.data[fat_offset..fat_offset + file_count * 8];
 
-        // TODO: Grab FNT and create a NitroFS FileSystem.
+        create_dir_all(&path)?;
 
+        let fs = FileSystem::default();
+        let base = path.as_ref();
+
+        // TODO: Grab FNT and create a NitroFS FileSystem.
+        let errors = fs.files()
+            .par_iter()
+            .filter_map(|file| {
+                match self.write(&base.join(&file.path), file.alloc.start, file.alloc.len()) {
+                    Ok(_) => None,
+                    Err(why) => Some(why),
+                }
+            })
+            .collect::<Vec<Error>>();
+
+        ensure!(errors.is_empty(), NarcError::WriteError(errors));
         Ok(())
     }
 
