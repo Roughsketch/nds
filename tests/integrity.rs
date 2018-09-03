@@ -6,7 +6,7 @@ mod tests {
 
     #[test]
     fn extract_tiny() {
-        let extractor = Extractor::new("TinyFB.nds")
+        let extractor = Extractor::new("TinyFB.nds", false)
             .expect("Could not make Extractor");
 
         assert!(extractor.extract("tmp/tiny").is_ok());
@@ -14,7 +14,8 @@ mod tests {
 
     #[test]
     fn checksum_matches() {
-        assert!(Extractor::new("small.nds").is_ok());
+        assert!(Extractor::new("big.nds", true).is_ok());
+        assert!(Extractor::new("small.nds", true).is_ok());
     }
 
     #[test]
@@ -25,7 +26,7 @@ mod tests {
     fn _built_rom_is_same() {
         use std::fs::read;
 
-        let extractor = Extractor::new("small.nds")
+        let extractor = Extractor::new("small.nds", true)
             .expect("Could not make Extractor");
 
         extractor.extract("output")
