@@ -15,5 +15,5 @@ exclude = ["tests/*", "benches/*"]
 
 [dependencies]
 byteorder = "1.2"
-failure = "0.1"
+failure = {git = "https://github.com/Roughsketch/failure", branch = "fix-ensure"}
 rayon = "1.0"

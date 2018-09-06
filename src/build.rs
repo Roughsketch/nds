@@ -1,4 +1,4 @@
-use failure::{bail, ensure, Fail, Error};
+use failure::{ensure, Error};
 
 use std::fs::read;
 use std::path::{Path, PathBuf};
