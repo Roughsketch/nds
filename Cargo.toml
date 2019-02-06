@@ -1,5 +1,3 @@
-cargo-features = ["edition"]
-
 [package]
 edition = "2018"
 name = "nds"
@@ -21,10 +19,10 @@ members = [
 ]
 
 [dependencies]
-byteorder = "1.2"
-failure = {git = "https://github.com/Roughsketch/failure", branch = "fix-ensure"}
-lazy_static = "1.1"
-memmap = "0.6"
+byteorder = "1.3"
+failure = "0.1"
+lazy_static = "1.2"
+memmap = "0.7"
 rayon = "1.0"
 
 [dependencies.num]
@@ -36,7 +34,7 @@ path = "nitro_fs"
 
 [dev-dependencies]
 criterion = "0.2"
-md5 = "0.3"
+md5 = "0.6"
 
 [[bench]]
 name = "extract"

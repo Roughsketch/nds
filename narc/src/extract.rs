@@ -1,5 +1,5 @@
 use byteorder::{LittleEndian, ReadBytesExt};
-use failure::{ensure, Error};
+use failure::{bail, ensure, Error};
 use memmap::Mmap;
 use num::NumCast;
 use rayon::prelude::*;

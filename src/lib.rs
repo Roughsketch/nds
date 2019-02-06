@@ -1,4 +1,4 @@
-#![feature(custom_attribute, uniform_paths)]
+#![feature(custom_attribute)]
 
 use failure::{Error, Fail};
 

@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 
 lazy_static! {
-    static ref crc16_table: [u16; 256] = [
+    static ref CRC16_TABLE: [u16; 256] = [
         0x0000, 0xC0C1, 0xC181, 0x0140, 0xC301, 0x03C0, 0x0280, 0xC241,
         0xC601, 0x06C0, 0x0780, 0xC741, 0x0500, 0xC5C1, 0xC481, 0x0440,
         0xCC01, 0x0CC0, 0x0D80, 0xCD41, 0x0F00, 0xCFC1, 0xCE81, 0x0E40,
@@ -40,6 +40,6 @@ lazy_static! {
 pub fn crc16(data: &[u8]) -> u16 {
     data.iter()
         .fold(0xFFFF, |crc, byte| {
-            (crc >> 8) ^ crc16_table[(crc as u8 ^ *byte) as usize]
+            (crc >> 8) ^ CRC16_TABLE[(crc as u8 ^ *byte) as usize]
         })
 }

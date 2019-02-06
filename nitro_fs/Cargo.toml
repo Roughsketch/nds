@@ -1,5 +1,3 @@
-cargo-features = ["edition"]
-
 [package]
 edition = "2018"
 name = "nitro_fs"
@@ -14,6 +12,6 @@ license = "MIT"
 exclude = ["tests/*", "benches/*"]
 
 [dependencies]
-byteorder = "1.2"
-failure = {git = "https://github.com/Roughsketch/failure", branch = "fix-ensure"}
+byteorder = "1.3"
+failure = "0.1"
 rayon = "1.0"
