@@ -1,7 +1,7 @@
 [package]
 edition = "2018"
 name = "nitro_fs"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Maid Dog <maiddogsrl@gmail.com>"]
 description = "Library for handling Nintendo's Nitro Filesystem"
 documentation = "https://docs.rs/nitro_fs"

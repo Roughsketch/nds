@@ -1,7 +1,7 @@
 [package]
 edition = "2018"
 name = "narc"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Maid Dog <maiddogsrl@gmail.com>"]
 description = "Library for handling Nintendo Nitro Archives."
 documentation = "https://docs.rs/narc"
