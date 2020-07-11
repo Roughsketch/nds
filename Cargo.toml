@@ -40,6 +40,7 @@ md5 = "0.6"
 [[bench]]
 name = "extract"
 harness = false
+path = "benches"
 
 [profile.release]
 lto = true
