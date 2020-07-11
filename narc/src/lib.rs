@@ -1,5 +1,3 @@
-#![feature(custom_attribute)]
-
 use failure::{Error, Fail};
 mod extract;
 
