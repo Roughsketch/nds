@@ -33,7 +33,7 @@ enum Header {
     Size = 0x84,
 }
 
-/// Extracts files from an NDS ROM.
+/// Extracts files from an NDS ROM and extracts them to a given path.
 #[derive(Debug)]
 pub struct Extractor {
     /// A memmap of the ROM to allow easy reading for potentially large files.
