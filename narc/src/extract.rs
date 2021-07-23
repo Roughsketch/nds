@@ -1,5 +1,4 @@
 use byteorder::{LittleEndian, ReadBytesExt};
-use failure::{bail, ensure, Error};
 use memmap::Mmap;
 use num::NumCast;
 use rayon::prelude::*;
@@ -7,7 +6,23 @@ use rayon::prelude::*;
 use std::fs::{create_dir_all, File};
 use std::path::Path;
 
-use crate::NarcError;
+use anyhow::{Result, ensure};
+
+// == Errors ==
+#[derive(Fail, Debug)]
+enum NarcError {
+    #[error("Not enough data.")]
+    NotEnoughData,
+
+    #[error("NARC header size does not match length of data.")]
+    SizeMismatch,
+
+    #[error("Header is invalid.")]
+    InvalidHeader,
+
+    #[error("Could not write all files successfully: {0:?}")]
+    WriteError(Vec<anyhow::Error>),
+}
 
 enum Header {
     Size = 0x08,
@@ -23,7 +38,7 @@ pub struct Extractor {
 }
 
 impl Extractor {
-    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, Error> {
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
         let root = path.as_ref();
 
         let file = File::open(root)?;
@@ -43,7 +58,7 @@ impl Extractor {
         })
     }
 
-    pub fn extract<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
+    pub fn extract<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         use nitro_fs::FileSystem;
 
         let file_count = self.read_u16(Header::FileCount as usize)? as usize;
@@ -72,13 +87,13 @@ impl Extractor {
     }
 
     /// Reads a u16 from `data` at the given offset.
-    fn read_u16(&self, offset: usize) -> Result<u16, Error> {
+    fn read_u16(&self, offset: usize) -> Result<u16> {
         let value = (&self.data[offset..]).read_u16::<LittleEndian>()?;
         Ok(value)
     }
 
     /// Reads a u32 from `data` at the given offset.
-    fn read_u32(&self, offset: usize) -> Result<u32, Error> {
+    fn read_u32(&self, offset: usize) -> Result<u32> {
         let value = (&self.data[offset..]).read_u32::<LittleEndian>()?;
         Ok(value)
     }
@@ -86,7 +101,7 @@ impl Extractor {
     /// A utility to make it easier to write chunks of the ROM to files.
     /// Copies `len` bytes from the ROM starting from `offset` into the file 
     /// denoted by `path`
-    fn write<P, N1, N2>(&self, path: P, offset: N1, len: N2) -> Result<(), Error>
+    fn write<P, N1, N2>(&self, path: P, offset: N1, len: N2) -> Result<()>
         where
             P: AsRef<Path>,
             N1: NumCast,
