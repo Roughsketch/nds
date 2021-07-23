@@ -1,10 +1,11 @@
 use byteorder::{LittleEndian, ReadBytesExt};
-use failure::Error;
 use rayon::prelude::*;
 
 use std::collections::BTreeMap;
 use std::io::{Cursor, Read};
 use std::path::Path;
+
+use anyhow::Result;
 
 pub mod fat;
 pub mod fnt;
@@ -20,7 +21,7 @@ pub struct FileSystem {
 }
 
 impl FileSystem {
-    pub fn new(fnt: &[u8], fat: &[u8]) -> Result<Self, Error> {
+    pub fn new(fnt: &[u8], fat: &[u8]) -> Result<Self> {
         let mut cursor = Cursor::new(fnt);
         let mut dirs = BTreeMap::new();
 
@@ -72,7 +73,7 @@ impl FileSystem {
         &self.overlays
     }
 
-    fn populate(&mut self, cursor: &mut Cursor<&[u8]>, fat: &FileAllocTable) -> Result<(), Error> {
+    fn populate(&mut self, cursor: &mut Cursor<&[u8]>, fat: &FileAllocTable) -> Result<()> {
         self._populate(cursor, "", ROOT_ID, fat)?;
 
         self.overlays = (0..self.start_id())
@@ -86,7 +87,7 @@ impl FileSystem {
         Ok(())
     }
 
-    fn _populate<P: AsRef<Path>>(&mut self, mut cursor: &mut Cursor<&[u8]>, path: P, id: u16, fat: &FileAllocTable) -> Result<(), Error> {
+    fn _populate<P: AsRef<Path>>(&mut self, mut cursor: &mut Cursor<&[u8]>, path: P, id: u16, fat: &FileAllocTable) -> Result<()> {
         let mut file_id = {
             let dir = self.dirs.get_mut(&id).unwrap();
             dir.set_path(&path);
@@ -129,7 +130,7 @@ impl FileSystem {
         Ok(())
     }
 
-    fn read_name<R: Read>(&self, cursor: &mut R, mut len: u8) -> Result<String, Error> {
+    fn read_name<R: Read>(&self, cursor: &mut R, mut len: u8) -> Result<String> {
         let mut name = String::new();
 
         if len > 0x80 {

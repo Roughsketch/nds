@@ -1,10 +1,11 @@
 use byteorder::{LittleEndian, ReadBytesExt};
-use failure::{bail, ensure, Fail, Error};
 
 use std::io::{Cursor, Read};
 
-#[fail(display = "FAT data has invalid size.")]
-#[derive(Clone, Debug, Fail)]
+use anyhow::{ensure, Result};
+
+#[derive(Clone, Debug, thiserror::Error)]
+#[error("FAT data has invalid size.")]
 struct InvalidFatLen;
 
 /// Represents an entry in the File Allocation Table.
@@ -17,7 +18,7 @@ pub struct AllocInfo {
 }
 
 impl AllocInfo {
-    pub fn new<R: Read>(reader: &mut R) -> Result<Self, Error> {
+    pub fn new<R: Read>(reader: &mut R) -> Result<Self> {
         Ok(Self {
             start: reader.read_u32::<LittleEndian>()?,
             end: reader.read_u32::<LittleEndian>()?,
@@ -45,7 +46,7 @@ impl FileAllocTable {
     /// 
     /// It will also return an error if reading from the data
     /// fails.
-    pub fn new(fat: &[u8]) -> Result<Self, Error> {
+    pub fn new(fat: &[u8]) -> Result<Self> {
         // Each entry is 8 bytes, so if not divisible by 8
         // then there is an issue with the passed data.
         ensure!(fat.len() % 8 == 0, InvalidFatLen);

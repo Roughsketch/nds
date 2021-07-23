@@ -1,5 +1,4 @@
 use byteorder::{LittleEndian, ReadBytesExt};
-use failure::{bail, ensure, Error};
 use memmap::Mmap;
 use num::NumCast;
 use rayon::prelude::*;
@@ -7,7 +6,20 @@ use rayon::prelude::*;
 use std::fs::{create_dir_all, File};
 use std::path::Path;
 
-use crate::NdsError;
+use anyhow::{ensure, Result};
+
+// == Errors ==
+#[derive(Debug, thiserror::Error)]
+pub enum ExtractError {
+    #[error("Not enough data.")]
+    NotEnoughData,
+
+    #[error("Header checksum does not match contents.")]
+    InvalidChecksum,
+
+    #[error("Could not write all files successfully: {0:?}")]
+    WriteError(Vec<anyhow::Error>),
+}
 
 enum Header {
     Arm9Offset = 0x20,
@@ -29,19 +41,19 @@ pub struct Extractor {
 }
 
 impl Extractor {
-    pub fn new<P: AsRef<Path>>(path: P, check_crc: bool) -> Result<Self, Error> {
+    pub fn new<P: AsRef<Path>>(path: P, check_crc: bool) -> Result<Self> {
         let root = path.as_ref();
 
         let file = File::open(root)?;
         let data = unsafe { Mmap::map(&file)? };
 
-        ensure!(data.len() >= 0x160, NdsError::NotEnoughData);
+        ensure!(data.len() >= 0x160, ExtractError::NotEnoughData);
 
         if check_crc {
             let checksum = (&data[0x15E..]).read_u16::<LittleEndian>()?;
             let crc = crate::util::crc::crc16(&data[0..0x15E]);
 
-            ensure!(crc == checksum, NdsError::InvalidChecksum);
+            ensure!(crc == checksum, ExtractError::InvalidChecksum);
         }
 
         Ok(Self {
@@ -52,7 +64,7 @@ impl Extractor {
     /// Extracts the ROM to the path given. An error is returned
     /// if there are issues with the ROM structure, or if there is
     /// an issue writing files.
-    pub fn extract<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
+    pub fn extract<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         use nitro_fs::FileSystem;
 
         let root = path.as_ref();
@@ -79,9 +91,9 @@ impl Extractor {
                     Err(why) => Some(why),
                 }
             })
-            .collect::<Vec<Error>>();
+            .collect::<Vec<anyhow::Error>>();
 
-        ensure!(errors.is_empty(), NdsError::WriteError(errors));
+        ensure!(errors.is_empty(), ExtractError::WriteError(errors));
 
         let errors = fs.files()
             .par_iter()
@@ -91,9 +103,9 @@ impl Extractor {
                     Err(why) => Some(why),
                 }
             })
-            .collect::<Vec<Error>>();
+            .collect::<Vec<anyhow::Error>>();
 
-        ensure!(errors.is_empty(), NdsError::WriteError(errors));
+        ensure!(errors.is_empty(), ExtractError::WriteError(errors));
 
         Ok(())
     }
@@ -101,7 +113,7 @@ impl Extractor {
     /// A utility to make it easier to write chunks of the ROM to files.
     /// Copies `len` bytes from the ROM starting from `offset` into the file 
     /// denoted by `path`
-    fn write<P, N1, N2>(&self, path: P, offset: N1, len: N2) -> Result<(), Error>
+    fn write<P, N1, N2>(&self, path: P, offset: N1, len: N2) -> Result<()>
         where
             P: AsRef<Path>,
             N1: NumCast,
@@ -112,7 +124,7 @@ impl Extractor {
         let offset: usize = NumCast::from(offset).unwrap();
         let len: usize = NumCast::from(len).unwrap();
 
-        ensure!(self.data.len() >= offset + len, NdsError::NotEnoughData);
+        ensure!(self.data.len() >= offset + len, ExtractError::NotEnoughData);
 
         {
             let parent = path.as_ref().parent().unwrap_or(Path::new(""));
@@ -128,25 +140,25 @@ impl Extractor {
     }
 
     /// Reads a u32 from `data` at the given offset.
-    fn read_u32(&self, offset: usize) -> Result<u32, Error> {
+    fn read_u32(&self, offset: usize) -> Result<u32> {
         let value = (&self.data[offset..]).read_u32::<LittleEndian>()?;
         Ok(value)
     }
 
-    fn fat(&self) -> Result<&[u8], Error> {
+    fn fat(&self) -> Result<&[u8]> {
         let fat_start = self.read_u32(Header::FatOffset as usize)? as usize;
         let fat_len = self.read_u32(Header::FatLen as usize)? as usize;
 
-        ensure!(self.data.len() > fat_start + fat_len, NdsError::NotEnoughData);
+        ensure!(self.data.len() > fat_start + fat_len, ExtractError::NotEnoughData);
 
         Ok(&self.data[fat_start..fat_start + fat_len])
     }
 
-    fn fnt(&self) -> Result<&[u8], Error> {
+    fn fnt(&self) -> Result<&[u8]> {
         let fnt_start = self.read_u32(Header::FntOffset as usize)? as usize;
         let fnt_len = self.read_u32(Header::FntLen as usize)? as usize;
 
-        ensure!(self.data.len() > fnt_start + fnt_len, NdsError::NotEnoughData);
+        ensure!(self.data.len() > fnt_start + fnt_len, ExtractError::NotEnoughData);
 
         Ok(&self.data[fnt_start..fnt_start + fnt_len])
     }
