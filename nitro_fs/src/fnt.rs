@@ -1,10 +1,11 @@
 use byteorder::{LittleEndian, ReadBytesExt};
-use failure::Error;
 
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
 use crate::fat::AllocInfo;
+
+use anyhow::Result;
 
 /// The offset that directory IDs start at. The root
 /// directory is ID 0xF000 and subsequent directories
@@ -59,7 +60,7 @@ pub struct Directory {
 }
 
 impl Directory {
-    pub fn new<R: Read>(reader: &mut R, id: u16) -> Result<Self, Error> {
+    pub fn new<R: Read>(reader: &mut R, id: u16) -> Result<Self> {
         Ok(Self {
             path: PathBuf::new(),
             files: Vec::new(),
