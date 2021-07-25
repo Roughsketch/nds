@@ -74,7 +74,7 @@ impl Default for Cpu {
 
 // -- Table --
 /// Returns the relevant data for the FNT (**F**ile **N**ame **T**able) and FAT
-/// (**F**ile **T**llocation **T**able). It should just help to avoid duplicated
+/// (**F**ile **A**llocation **T**able). It should just help to avoid duplicated
 /// code for the [`fnt`] and [`fat`] attributes of the [`NDSParser`] struct.
 ///
 /// [`fnt`]: struct.NDSParser.html#structfield.fnt
