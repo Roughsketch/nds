@@ -2,17 +2,21 @@ use md5::compute;
 use nds::{Builder, Extractor};
 use std::panic;
 
+// our testing .nds files
+const TEST_HELLO_WORLD: &'static str = "tests/test_nds_files/hello_world.nds";
+const TEST_3D_BOTH_SCREENS: &'static str = "tests/test_nds_files/3D_Both_Screens.nds";
+
 #[test]
 fn extract_tiny() {
-    let extractor = Extractor::new("TinyFB.nds", false).expect("Could not make Extractor");
+    let extractor = Extractor::new(TEST_HELLO_WORLD, false).expect("Could not make Extractor");
 
     assert!(extractor.extract("tmp/tiny").is_ok());
 }
 
 #[test]
 fn checksum_matches() {
-    assert!(Extractor::new("big.nds", true).is_ok());
-    assert!(Extractor::new("small.nds", true).is_ok());
+    assert!(Extractor::new(TEST_HELLO_WORLD, true).is_ok());
+    assert!(Extractor::new(TEST_3D_BOTH_SCREENS, true).is_ok());
 }
 
 #[test]
@@ -23,7 +27,7 @@ fn built_rom_is_same() {
 fn _built_rom_is_same() {
     use std::fs::read;
 
-    let extractor = Extractor::new("small.nds", true).expect("Could not make Extractor");
+    let extractor = Extractor::new(TEST_HELLO_WORLD, true).expect("Could not make Extractor");
 
     extractor.extract("output").expect("Could not extract");
 
@@ -31,7 +35,7 @@ fn _built_rom_is_same() {
 
     builder.build("built.nds").expect("Could not build");
 
-    let original = read("small.nds").expect("Could not read small.nds'");
+    let original = read(TEST_HELLO_WORLD).expect("Could not read small.nds'");
 
     let built = read("built.nds").expect("Could not read built.nds'");
 
