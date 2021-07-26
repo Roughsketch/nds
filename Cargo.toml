@@ -28,13 +28,8 @@ rayon = "1.0"
 thiserror = "1.0.26"
 anyhow = "1.0"
 
-[dependencies.num]
-version = "0.2"
-default-features = false
-
-[dependencies.nitro_fs]
-path = "nitro_fs"
-version = "0.1.1"
+num = {version = "0.2", default-features = false}
+nitro_fs = {path = "nitro_fs", version = "0.1.1" }
 
 [dev-dependencies]
 criterion = "0.2"

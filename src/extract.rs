@@ -33,7 +33,7 @@ enum Header {
     Size = 0x84,
 }
 
-/// Extracts files from an NDS ROM.
+/// Extracts files from an NDS ROM to a given path.
 #[derive(Debug)]
 pub struct Extractor {
     /// A memmap of the ROM to allow easy reading for potentially large files.
@@ -61,7 +61,7 @@ impl Extractor {
         })
     }
 
-    /// Extracts the ROM to the path given. An error is returned
+    /// Extracts the ROM to the given path. An error is returned
     /// if there are issues with the ROM structure, or if there is
     /// an issue writing files.
     pub fn extract<P: AsRef<Path>>(&self, path: P) -> Result<()> {
