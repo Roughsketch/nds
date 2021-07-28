@@ -1,6 +1,6 @@
 # nds
 
-[Documentation](https://docs.rs/crate/nds/latest)
+[Documentation](https://docs.rs/nds/0.2.0/nds/)
 
 A library for interacting with NDS files.
 
