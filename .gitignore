@@ -14,7 +14,6 @@ Cargo.lock
 Cargo.lock
 
 tmp/
-*.nds
 
 *.bak
 
