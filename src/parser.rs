@@ -26,7 +26,7 @@ use std::io::Read;
 // == Errors ==
 /// Errors which could occur while parsing a `.nds` file.
 #[derive(Debug, thiserror::Error)]
-pub enum ParserError {
+pub enum NDSParserError {
     #[error("An IO error appeared")]
     IO(#[from] std::io::Error),
 
@@ -145,7 +145,7 @@ pub struct NDSParser {
 /// }
 /// ```
 impl TryFrom<&str> for NDSParser {
-    type Error = ParserError;
+    type Error = NDSParserError;
 
     fn try_from(path: &str) -> Result<Self, Self::Error> {
         let mut file = File::open(path)?;
@@ -189,12 +189,12 @@ impl TryFrom<&str> for NDSParser {
 ///
 /// [this table]: https://dsibrew.org/wiki/DSi_Cartridge_Header
 impl TryFrom<&Vec<u8>> for NDSParser {
-    type Error = ParserError;
+    type Error = NDSParserError;
 
     fn try_from(content: &Vec<u8>) -> Result<Self, Self::Error> {
         // Make sure that the byte-vector includes enough information
         if content.len() < 0x181 {
-            return Err(ParserError::NotEnoughData);
+            return Err(NDSParserError::NotEnoughData);
         }
 
         // store the values. The indexes are taken from this table:
