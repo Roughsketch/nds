@@ -18,3 +18,4 @@ tmp/
 *.bak
 
 *.log
+./*.nds
