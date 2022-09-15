@@ -7,9 +7,10 @@ use std::fs::{create_dir_all, File};
 use std::path::Path;
 
 use anyhow::{Result, ensure};
+use thiserror;
 
 // == Errors ==
-#[derive(Fail, Debug)]
+#[derive(thiserror::Error, Debug)]
 enum NarcError {
     #[error("Not enough data.")]
     NotEnoughData,
@@ -80,7 +81,7 @@ impl Extractor {
                     Err(why) => Some(why),
                 }
             })
-            .collect::<Vec<Error>>();
+            .collect::<Vec<anyhow::Error>>();
 
         ensure!(errors.is_empty(), NarcError::WriteError(errors));
         Ok(())
